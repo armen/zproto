@@ -41,17 +41,11 @@ func TestBinary(t *testing.T) {
 
 	// Create a Binary message and send it through the wire
 	binary := NewBinary()
-
-	binary.sequence = 123
-
+	binary.sequence = 120
 	binary.Flags = [4]byte{'z', 'z', 'z', 'z'}
-
 	binary.PublicKey = []byte("Captcha Diem")
-
 	binary.Identifier = []byte("Captcha Diem")
-
 	binary.Address = []byte("Captcha Diem")
-
 	binary.Content = []byte("Captcha Diem")
 
 	err = binary.Send(output)
@@ -65,13 +59,14 @@ func TestBinary(t *testing.T) {
 
 	tr := transit.(*Binary)
 
-	if tr.sequence != 123 {
+	if tr.sequence != 120 {
 		t.Fatalf("expected %d, got %d", 123, tr.sequence)
 	}
 
 	if len(tr.Flags) != 4 {
 		t.Fatalf("mismatch octets size for %s", "Flags")
 	}
+
 	for idx, b := range [4]byte{'z', 'z', 'z', 'z'} {
 		if tr.Flags[idx] != b {
 			t.Fatalf("mismatch octets value for %s", "Flags")

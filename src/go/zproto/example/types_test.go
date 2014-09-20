@@ -41,23 +41,14 @@ func TestTypes(t *testing.T) {
 
 	// Create a Types message and send it through the wire
 	types := NewTypes()
-
-	types.sequence = 123
-
+	types.sequence = 120
 	types.ClientForename = "Life is short but Now lasts for ever"
-
 	types.ClientSurname = "Life is short but Now lasts for ever"
-
 	types.ClientMobile = "Life is short but Now lasts for ever"
-
 	types.ClientEmail = "Life is short but Now lasts for ever"
-
 	types.SupplierForename = "Life is short but Now lasts for ever"
-
 	types.SupplierSurname = "Life is short but Now lasts for ever"
-
 	types.SupplierMobile = "Life is short but Now lasts for ever"
-
 	types.SupplierEmail = "Life is short but Now lasts for ever"
 
 	err = types.Send(output)
@@ -71,7 +62,7 @@ func TestTypes(t *testing.T) {
 
 	tr := transit.(*Types)
 
-	if tr.sequence != 123 {
+	if tr.sequence != 120 {
 		t.Fatalf("expected %d, got %d", 123, tr.sequence)
 	}
 

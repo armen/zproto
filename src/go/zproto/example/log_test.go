@@ -41,21 +41,13 @@ func TestLog(t *testing.T) {
 
 	// Create a Log message and send it through the wire
 	log := NewLog()
-
-	log.sequence = 123
-
-	log.Level = 123
-
-	log.Event = 123
-
+	log.sequence = 120
+	log.Level = 121
+	log.Event = 122
 	log.Node = 123
-
-	log.Peer = 123
-
-	log.Time = 123
-
+	log.Peer = 124
+	log.Time = 125
 	log.Host = "Life is short but Now lasts for ever"
-
 	log.Data = "Life is short but Now lasts for ever"
 
 	err = log.Send(output)
@@ -69,15 +61,15 @@ func TestLog(t *testing.T) {
 
 	tr := transit.(*Log)
 
-	if tr.sequence != 123 {
+	if tr.sequence != 120 {
 		t.Fatalf("expected %d, got %d", 123, tr.sequence)
 	}
 
-	if tr.Level != 123 {
+	if tr.Level != 121 {
 		t.Fatalf("expected %d, got %d", 123, tr.Level)
 	}
 
-	if tr.Event != 123 {
+	if tr.Event != 122 {
 		t.Fatalf("expected %d, got %d", 123, tr.Event)
 	}
 
@@ -85,11 +77,11 @@ func TestLog(t *testing.T) {
 		t.Fatalf("expected %d, got %d", 123, tr.Node)
 	}
 
-	if tr.Peer != 123 {
+	if tr.Peer != 124 {
 		t.Fatalf("expected %d, got %d", 123, tr.Peer)
 	}
 
-	if tr.Time != 123 {
+	if tr.Time != 125 {
 		t.Fatalf("expected %d, got %d", 123, tr.Time)
 	}
 

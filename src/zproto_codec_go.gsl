@@ -594,34 +594,30 @@ func Test$(name:no)(t *testing.T) {
 	// Create a $(Name) message and send it through the wire
 	$(name) := New$(name:no)()
 .   struct = "$(name)"
+.   testnum = 120
 .   for field where !defined (value)
 .       if type = "number"
-
-	$(struct).$(name:no) = 123
+	$(struct).$(name:no) = $(testnum)
 .       elsif type = "octets"
 .           if defined(size)
 .               data = "'z', " * size
 .               data_len = string.length(data)
 .               data = string.substr(data, 0, data_len-3)
-
 	$(struct).$(name:no) = [$(size)]byte{$(data)}
 .           else
-
 	$(struct).$(name:no) = []byte{'z', 'y'}
 .           endif
 .       elsif type = "string" | type = "longstr"
-
 	$(struct).$(name:no) = "Life is short but Now lasts for ever"
 .       elsif type = "strings"
-
 	$(struct).$(name:no) = []string{"Name: Brutus", "Age: 43"}
 .       elsif type = "hash"
 
 	$(struct).$(name:no) = map[string]string{"Name": "Brutus", "Age": "43"}
 .       elsif type = "frame" | type = "msg" | type = "uuid" | type = "chunk"
-
 	$(struct).$(name:no) = []byte("Captcha Diem")
 .       endif
+.   testnum = testnum + 1
 .   endfor
 
 	err = $(name).Send(output)
@@ -634,10 +630,11 @@ func Test$(name:no)(t *testing.T) {
 	}
 
 	tr := transit.(*$(name:no))
+.   testnum = 120
 .   for field where !defined (value)
 .       if type = "number"
 
-	if tr.$(name:no) != 123 {
+	if tr.$(name:no) != $(testnum) {
 		t.Fatalf("expected %d, got %d", 123, tr.$(name:no))
 	}
 .       elsif type = "octets"
@@ -649,6 +646,7 @@ func Test$(name:no)(t *testing.T) {
 	if len(tr.$(name:no)) != $(size) {
 		t.Fatalf("mismatch octets size for %s", "$(name:no)")
 	}
+
 	for idx, b := range [$(size)]byte{$(data)} {
 		if tr.$(name:no)[idx] != b {
 			t.Fatalf("mismatch octets value for %s", "$(name:no)")
@@ -659,6 +657,7 @@ func Test$(name:no)(t *testing.T) {
 	if len(tr.$(name:no)) != 2 {
 		t.Fatalf("mismatch octets size for %s", "$(name:no)")
 	}
+
 	for idx, b := range []byte{'z', 'y'} {
 		if tr.$(name:no)[idx] != b {
 			t.Fatalf("mismatch octets value for %s", "$(name:no)")
@@ -690,6 +689,7 @@ func Test$(name:no)(t *testing.T) {
 		t.Fatalf("expected %s, got %s", "Captcha Diem", tr.$(name:no))
 	}
 .       endif
+.   testnum = testnum + 1
 .   endfor
 
 	err = tr.Send(input)
