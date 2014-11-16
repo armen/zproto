@@ -706,4 +706,187 @@ func Test$(name:no)(t *testing.T) {
 		t.Fatalf("expected %s, got %s", routingId, string(tr.RoutingId()))
 	}
 }
+.output "$(go_package_path())/$(origname)_zproto_c_test.go"
+// +build test_zproto_c
+package $(go_package_name())
+
+import (
+    "testing"
+)
+
+// Tests interoperability of Go implementation with C implementation
+func Test$(name:no)ZprotoC(t *testing.T) {
+	test$(name:no)InputFromC(t)
+}
+.output "$(go_package_path())/$(origname)_zproto_c.go"
+// +build test_zproto_c
+package $(go_package_name())
+
+// #cgo CFLAGS: -I../../../../include -I/usr/local/include
+// #cgo LDFLAGS: ../../../.libs/libzproto.a
+// #cgo pkg-config: libczmq
+//
+// #include <czmq.h>
+// #include <zproto_example.h>
+//
+// static zsock_t* zproto_zsock_new(int type) {
+//     return zsock_new(type);
+// }
+//
+// static int zproto_zsock_bind(zsock_t *sock, const char *addr) {
+//     return zsock_bind(sock, addr);
+// }
+//
+// static void zproto_zsock_destroy(zsock_t **sock) {
+//     zsock_destroy(sock);
+// }
+import "C"
+
+import (
+	"testing"
+	"unsafe"
+
+	zmq "github.com/pebbe/zmq4"
+)
+
+// Tests interoperability of Go implementation with C implementation
+func test$(name:no)InputFromC(t *testing.T) {
+
+	// Output socket (C implementaion)
+	output := C.zproto_zsock_new(C.ZMQ_DEALER)
+    C.zproto_zsock_bind(output, C.CString("tcp://127.0.0.1:5557"))
+
+	// Input socket
+	input, err := zmq.NewSocket(zmq.ROUTER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer input.Close()
+
+	err = input.Connect("tcp://127.0.0.1:5557")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer input.Disconnect("tcp://127.0.0.1:5557")
+
+	// Create a $(Name) message and send it through the wire
+.   cprefix = "zproto_$(go_package_name())_"
+.   self = "$(name)"
+	$(self) := C.$(cprefix)new(C.$(CPREFIX)$(NAME))
+.   testnum = 120
+.   for field where !defined (value)
+.       if type = "number"
+	C.$(cprefix)set_$(name)($(self), $(testnum))
+.       elsif type = "octets"
+.           if defined(size)
+.               data = "'z', " * size
+.               data_len = string.length(data)
+.               data = string.substr(data, 0, data_len-3)
+	//$(self).$(name:no) = [$(size)]byte{$(data)}
+.           else
+	//$(self).$(name:no) = []byte{'z', 'y'}
+.           endif
+.       elsif type = "string" | type = "longstr"
+	//$(self).$(name:no) = "Life is short but Now lasts for ever"
+.       elsif type = "strings"
+	//$(self).$(name:no) = []string{"Name: Brutus", "Age: 43"}
+.       elsif type = "dictionary"
+	//$(self).$(name:no) = map[string]string{"Name": "Brutus", "Age": "43"}
+.       elsif type = "frame" | type = "msg" | type = "uuid" | type = "chunk"
+	//$(self).$(name:no) = []byte("Captcha Diem")
+.       endif
+.   testnum = testnum + 1
+.   endfor
+
+    // Send twice from same object
+    C.zproto_example_send_again($(self), unsafe.Pointer(output))
+    C.zproto_example_send(&$(self), unsafe.Pointer(output))
+
+	for i:=0; i < 2; i++ {
+		transit, err := Recv(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		tr := transit.(*$(name:no))
+.   testnum = 120
+.   for field where !defined (value)
+.       if type = "number"
+
+		if tr.$(name:no) != $(testnum) {
+			t.Fatalf("expected %d, got %d", 123, tr.$(name:no))
+		}
+.       elsif type = "octets"
+.           if defined(size)
+.           data = "'z', " * size
+.           data_len = string.length(data)
+.           data = string.substr(data, 0, data_len-3)
+
+		if len(tr.$(name:no)) != $(size) {
+			t.Fatalf("mismatch octets size for %s", "$(name:no)")
+		}
+
+		for idx, b := range [$(size)]byte{$(data)} {
+			if tr.$(name:no)[idx] != b {
+				t.Fatalf("mismatch octets value for %s", "$(name:no)")
+			}
+		}
+.           else
+
+		if len(tr.$(name:no)) != 2 {
+			t.Fatalf("mismatch octets size for %s", "$(name:no)")
+		}
+
+		for idx, b := range []byte{'z', 'y'} {
+			if tr.$(name:no)[idx] != b {
+				t.Fatalf("mismatch octets value for %s", "$(name:no)")
+			}
+		}
+.           endif
+.       elsif type = "string" | type = "longstr"
+
+		if tr.$(name:no) != "Life is short but Now lasts for ever" {
+			//t.Fatalf("expected %s, got %s", "Life is short but Now lasts for ever", tr.$(name:no))
+		}
+.       elsif type = "strings"
+
+		for idx, str := range []string{"Name: Brutus", "Age: 43"} {
+			if tr.$(name:no)[idx] != str {
+				t.Fatalf("expected %s, got %s", str, tr.$(name:no)[idx])
+			}
+		}
+.       elsif type = "dictionary"
+
+		for key, val := range map[string]string{"Name": "Brutus", "Age": "43"} {
+			if tr.$(name:no)[key] != val {
+				t.Fatalf("expected %s, got %s", val, tr.$(name:no)[key])
+			}
+		}
+.       elsif type = "frame" | type = "msg" | type = "uuid" | type = "chunk"
+
+		if string(tr.$(name:no)) != "Captcha Diem" {
+			t.Fatalf("expected %s, got %s", "Captcha Diem", tr.$(name:no))
+		}
+.       endif
+.   testnum = testnum + 1
+.   endfor
+	}
+
+/*
+	err = tr.Send(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	transit, err = Recv(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if routingId != string(tr.RoutingId()) {
+		t.Fatalf("expected %s, got %s", routingId, string(tr.RoutingId()))
+	}
+*/
+	C.zproto_zsock_destroy(&output);
+}
 .endfor
